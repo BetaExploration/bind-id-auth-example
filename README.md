@@ -13,6 +13,7 @@ but your implementation should look very similar if you use Node.js.
 
 1. Clone this repository
 2. Run `npm i` to install dependencies
+3. Set up [Clerk](https://clerk.com)
 3. Copy `.env.example` to `.env.local` and fill in the values
 3. Run `npm run dev` to start the development server
 4. Open [http://localhost:3000](http://localhost:3000) in your browser

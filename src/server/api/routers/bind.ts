@@ -1,31 +1,24 @@
-import { z } from "zod"
-import {
-  createTRPCRouter,
-  publicProcedure,
-  protectedProcedure,
-} from "~/server/api/trpc"
-import { env } from "~/env.mjs"
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc"
 import { getIdHash } from "~/utils/hash"
 import axios from "axios"
+import { UserIdSchema } from "~/schemas"
 
 export const bindRouter = createTRPCRouter({
-  joinLink: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.auth.userId
-    const idHash = getIdHash(userId, env.BIND_SECRET)
-    const workspace = env.BIND_WORKSPACE
+  joinLink: publicProcedure.input(UserIdSchema).query(({ input }) => {
+    const idHash = getIdHash(input.userId, input.bindSecret)
+    const workspace = input.bindWorkspaceId
 
     const params = new URLSearchParams({
       idHash,
-      userId,
+      userId: input.userId,
       workspace,
     })
 
     return `https://bind.ie/join?${params.toString()}`
   }),
 
-  currentUser: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.auth.userId
-    const idHash = getIdHash(userId, env.BIND_SECRET)
+  currentUser: publicProcedure.input(UserIdSchema).query(async ({ input }) => {
+    const idHash = getIdHash(input.userId, input.bindSecret)
 
     try {
       interface BindUserByHashResponse {
@@ -39,8 +32,8 @@ export const bindRouter = createTRPCRouter({
         {
           params: {
             idHash,
-            userId,
-            workspace: env.BIND_WORKSPACE,
+            userId: input.userId,
+            workspace: input.bindWorkspaceId,
           },
         }
       )

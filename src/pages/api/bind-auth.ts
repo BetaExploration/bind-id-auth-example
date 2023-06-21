@@ -1,20 +1,30 @@
 import { type NextApiRequest, type NextApiResponse } from "next"
-import { getAuth } from "@clerk/nextjs/server"
 import qs from "node:querystring"
 import { env } from "~/env.mjs"
 import { getIdHash } from "~/utils/hash"
+
+// This is just a mock auth object. In your app, you would use your own authentication provider.
+const auth = {
+  userId: "123",
+}
 
 function bindAuth(req: NextApiRequest, res: NextApiResponse) {
   if (typeof req.query.token !== "string") {
     return res.status(400).json({ message: "Invalid token." })
   }
 
+  const bindSecret = env.NEXT_PUBLIC_BIND_SECRET as string
+  if (!bindSecret) {
+    return res.status(500).json({
+      message:
+        "NEXT_PUBLIC_BIND_SECRET is not set. Set the environment variable to your secret to test this route.",
+    })
+  }
+
   try {
-    const auth = getAuth(req)
     if (!auth.userId) {
-      return res.redirect(`/sign-in?redirect=/api/bind-auth`)
+      return res.redirect(`/`)
     }
-    const bindSecret = env.BIND_SECRET
 
     const idHash = getIdHash(auth.userId, bindSecret)
 
