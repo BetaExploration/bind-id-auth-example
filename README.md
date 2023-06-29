@@ -11,15 +11,13 @@ but your implementation should look very similar if you use Node.js.
 
 ## Test it out
 
+See the example in action at [bind-id-auth-example.vercel.app/](bind-id-auth-example.vercel.app/).
+
 1. Clone this repository
 2. Run `npm i` to install dependencies
-3. Set up [Clerk](https://clerk.com)
 3. Copy `.env.example` to `.env.local` and fill in the values
 3. Run `npm run dev` to start the development server
 4. Open [http://localhost:3000](http://localhost:3000) in your browser
-5. Click the "Sign up" button
-6. Sign up for an account
-7. Click the "Join Bind" link to test the integration.
 
 ## How to set up your own App -> Bind -> Discord integration
 
@@ -61,12 +59,18 @@ function bindAuth(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ message: "Invalid token." })
   }
 
+  const bindSecret = env.NEXT_PUBLIC_BIND_SECRET as string
+  if (!bindSecret) {
+    return res.status(500).json({
+      message:
+        "NEXT_PUBLIC_BIND_SECRET is not set. Set the environment variable to your secret to test this route.",
+    })
+  }
+
   try {
-    const auth = getAuth(req) // Get the user's identity
     if (!auth.userId) {
-      return res.redirect(`/sign-in?redirect=/api/bind-auth`)
+      return res.redirect(`/`)
     }
-    const bindSecret = env.BIND_SECRET // Get the Bind secret from your environment variables
 
     const idHash = getIdHash(auth.userId, bindSecret) // Get the id hash using the Bind secret and the user id
 
@@ -74,8 +78,8 @@ function bindAuth(req: NextApiRequest, res: NextApiResponse) {
       token: req.query.token,
       idHash,
       userId: auth.userId,
-    }) // Construct the query string
-      
+    })
+
     res.redirect(`https://bind.ie/auth/external/verify?${query}`) // Redirect the user to Bind to complete the authentication
   } catch (err) {
     console.log(err)
